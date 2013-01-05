@@ -1,4 +1,4 @@
-#include <stio.h>
+#include <stdio.h>
 
 int main(int argc, char *argv[]) {
   int age = 10;
