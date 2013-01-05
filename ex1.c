@@ -1,4 +1,6 @@
-int main(int arc, int argv[])
+#include <stdio.h>
+
+int main(int arc, char *argv[])
 {
   puts("Hello world.");
 
