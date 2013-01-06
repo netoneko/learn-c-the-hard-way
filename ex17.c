@@ -34,7 +34,7 @@ struct Address {
 };
 
 struct Database {
-  struct Address *rows;
+  struct Address **rows;
   int count;
 };
 
@@ -62,7 +62,7 @@ void Database_set(struct Connection *conn, char *name, char *email) {
   if (!conn) die("memory error");
 
   struct Address *addr = Address_create(name, email);
-  conn->db->rows[conn->db->count] = *addr;
+  conn->db->rows[conn->db->count] = addr;
   conn->db->count++;
 }
 
@@ -112,10 +112,8 @@ void Database_write(struct Connection *conn) {
   rewind(conn->file);
 
   for (int i = 0; i < conn->db->count; i++) {
-    struct Address *addr = &conn->db->rows[i];
+    struct Address *addr = conn->db->rows[i];
 
-    if (!addr) continue;
-    
     char *line = malloc(sizeof(char) * MAX_DATA);;
     sprintf(line, "%s,%s\n", addr->name, addr->email);
 
@@ -135,19 +133,24 @@ void Database_delete(struct Connection *conn, int num) {
 
   if (conn->db->count <= num) die("Sorry, I just can't.");
 
-  struct Address *addr = &conn->db->rows[num];
+  struct Address *addr = conn->db->rows[num];
   printf("Following address was deleted: ");
   Address_print(addr);
 
-  //conn->db->rows[num] = NULL;
-  free(addr);
+
+  struct Address *dst = conn->db->rows[num];
+  struct Address *src = conn->db->rows[num + 1];
+
+  memmove(src, dst, sizeof(struct Address));
+
+  conn->db->count--;
 }
 
 
 void Database_list(struct Connection *conn) {
   for (int i = 0; i < conn->db->count; i++) {
     printf("#%d ", i);
-    Address_print(&conn->db->rows[i]);
+    Address_print(conn->db->rows[i]);
   }
 
   printf("Total %d entries.\n", conn->db->count);
@@ -170,6 +173,7 @@ void process_input(char *dbfile, char *action, char *params[], int paramc) {
      case 'd':
        if (paramc < 1) die("Please specify id");
        Database_delete(conn, atoi(params[0]));
+       Database_list(conn);
        Database_write(conn);
        break;
 
