@@ -78,6 +78,11 @@ void process_input(char *dbfile, char *action, char *params[], int paramc) {
   
   conn->db = db;
 
+  switch (action[0]) {
+     default:
+       die("Invalid action, only c=create, g=get, s=set, d=delete, l=list.\n");
+  }
+
   Connection_destroy(conn);
   Database_destroy(db);
 }
