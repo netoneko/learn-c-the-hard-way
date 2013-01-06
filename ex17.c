@@ -70,27 +70,37 @@ struct Database {
   int count;
 };
 
-struct Database *Database_create() {
+struct Connection {
+  FILE *file;
+  struct Database *db;
+};
+
+struct Connection *Database_open(char *dbfile) {
+  struct Connection *conn = malloc(sizeof(struct Connection));
+  if (!conn) die("Memory error");
+
   struct Database *db = malloc(sizeof(struct Database));
   if (!db) die("Memory error");
 
   db->count = 0;
 
-  return db;
+  conn->db = db;
+
+  return conn;
 }
 
-void Database_destroy(struct Database *db) {
-  if (!db) die("Memory error");
+void Database_close(struct Connection *conn) {
+  if (!conn) die("Memory error");
 
-  //for (int i = 0; i < db->count; i++) {
-  //  Address_destroy(&db->rows[i]);
-  //}
-
-  //free(db->rows);
-  free(db);
+  free(conn->db);
+  //free(conn->file);
+  free(conn);
 }
 
-void Database_set(struct Database *db, char *name, char *email) {
+void Database_set(struct Connection *conn, char *name, char *email) {
+  if (!conn) die("Memory error");
+
+  struct Database *db = conn->db;
   if (!db) die("Memory error");
 
   struct Address *addr = Address_create(name, email);
@@ -100,44 +110,20 @@ void Database_set(struct Database *db, char *name, char *email) {
   Address_print(addr);
 }
 
-struct Connection {
-  FILE *file;
-  struct Database *db;
-};
-
-struct Connection *Connection_create() {
-  struct Connection *conn = malloc(sizeof(struct Connection));
-  if (!conn) die("Memory error");
-
-  return conn;
-}
-
-void Connection_destroy(struct Connection *conn) {
-  if (!conn) die("Memory error");  
-
-  //free(conn->db);
-  //free(conn->file);
-  free(conn);
-}
-
 void process_input(char *dbfile, char *action, char *params[], int paramc) {
-  struct Connection *conn = Connection_create();
-  struct Database *db = Database_create();
-  
-  conn->db = db;
+  struct Connection *conn = Database_open(dbfile);
 
   switch (action[0]) {
      case 's':
        if (paramc < 2) die("Please specify name and email");
-       Database_set(db, params[0], params[1]); 
+       Database_set(conn, params[0], params[1]);
        break;
 
      default:
        die("Invalid action, only c=create, g=get, s=set, d=delete, l=list.\n");
   }
 
-  Connection_destroy(conn);
-  Database_destroy(db);
+  Database_close(conn);
 }
 
 int main(int argc, char *argv[]) {
