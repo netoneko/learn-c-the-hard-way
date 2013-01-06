@@ -120,16 +120,6 @@ void Connection_destroy(struct Connection *conn) {
   free(conn);
 }
 
-char *params_extract_name(char *params[], int paramc) {
-  if (paramc < 2) die("Not enough params, try <action> <name> <surname (optional)> <email>");
-  return params[0];
-}
-
-char *params_extract_email(char *params[], int paramc) {
-  if (paramc < 2) die("Not enough params, try <action> <name> <surname (optional)> <email>");
-  return params[paramc - 1];
-}
-
 void process_input(char *dbfile, char *action, char *params[], int paramc) {
   struct Connection *conn = Connection_create();
   struct Database *db = Database_create();
@@ -138,9 +128,8 @@ void process_input(char *dbfile, char *action, char *params[], int paramc) {
 
   switch (action[0]) {
      case 's':
-       Database_set(db, 
-                    params_extract_name(params, paramc), 
-                    params_extract_email(params, paramc));
+       if (paramc < 2) die("Please specify name and email");
+       Database_set(db, params[0], params[1]); 
        break;
 
      default:
