@@ -112,10 +112,11 @@ void Database_write(struct Connection *conn) {
 
   for (int i = 0; i < conn->db->count; i++) {
     struct Address *addr = &conn->db->rows[i];
+
+    if (!addr) continue;
+    
     char *line = malloc(sizeof(char) * MAX_DATA);;
     sprintf(line, "%s,%s\n", addr->name, addr->email);
-
-    puts(line);
 
     int rc = fputs(line, conn->file);
 
@@ -124,6 +125,21 @@ void Database_write(struct Connection *conn) {
   }
 
   fflush(conn->file);
+}
+
+void Database_delete(struct Connection *conn, int num) {
+  if (!conn) die("Memory error");
+
+  printf("count, num: %d, %d\n", conn->db->count, num);
+
+  if (conn->db->count <= num) die("Sorry, I just can't.");
+
+  struct Address *addr = &conn->db->rows[num];
+  printf("Following address was deleted: ");
+  Address_print(addr);
+
+  //conn->db->rows[num] = NULL;
+  //free(addr);
 }
 
 
@@ -144,10 +160,16 @@ void process_input(char *dbfile, char *action, char *params[], int paramc) {
        if (paramc < 2) die("Please specify name and email");
        Database_set(conn, params[0], params[1]);
        Database_write(conn);
-       //break;
+       break;
 
      case 'l':
        Database_list(conn);
+       break;
+
+     case 'd':
+       if (paramc < 1) die("Please specify id");
+       Database_delete(conn, atoi(params[0]));
+       Database_write(conn);
        break;
 
      default:
