@@ -168,7 +168,7 @@ void process_input(char *dbfile, char *action, char *params[], int paramc) {
        break;
 
      default:
-       die("Invalid action, only c=create, g=get, s=set, d=delete, l=list.\n");
+       die("Invalid action, only g=get, s=set, d=delete, l=list.\n");
   }
 
   Database_close(conn);
