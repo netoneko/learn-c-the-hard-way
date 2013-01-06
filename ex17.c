@@ -76,11 +76,21 @@ struct Connection {
   struct Database *db;
 };
 
+void Database_set(struct Connection *conn, char *name, char *email) {
+  if (!conn) die("memory error");
+
+  struct Address *addr = Address_create(name, email);
+  conn->db->rows[conn->db->count] = *addr;
+  conn->db->count++;
+}
+
 void Database_load(struct Connection *conn) {
   char *line = malloc(sizeof(char) * MAX_LINES);
   while (fgets(line, MAX_LINES, conn->file) != NULL) {
-    printf("line: %s", line);
-
+    char *name = strndup(line, MAX_DATA);
+    char *email = NULL;
+    strtok_r(name, ",", &email);
+    Database_set(conn, name, email);
   }
 }
 
@@ -118,20 +128,13 @@ void Database_write(struct Connection *conn) {
   if (rc != 1) die("Failed to flush database");
 }
 
-void Database_set(struct Connection *conn, char *name, char *email) {
-  if (!conn) die("memory error");
 
-  struct Address *addr = Address_create(name, email);
-  conn->db->rows[conn->db->count] = *addr;
-  conn->db->count++;
-
-  Address_print(addr);
-}
-
-void Database_list(struct Connection *con) {
-  for (int i = 0; i < con->db->count; i++) {
-    Address_print(&con->db->rows[i]);
+void Database_list(struct Connection *conn) {
+  for (int i = 0; i < conn->db->count; i++) {
+    Address_print(&conn->db->rows[i]);
   }
+
+  printf("Total %d entries.\n", conn->db->count);
 }
 
 void process_input(char *dbfile, char *action, char *params[], int paramc) {
