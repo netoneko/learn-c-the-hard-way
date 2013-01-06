@@ -34,7 +34,7 @@ struct Address {
 };
 
 struct Database {
-  struct Address rows[MAX_ROWS];
+  struct Address *rows;
   int count;
 };
 
@@ -86,6 +86,7 @@ struct Connection *Database_open(char *dbfile) {
   conn->db = malloc(sizeof(struct Database));
   if (!conn->db) die("Memory error");
   conn->db->count = 0;
+  conn->db->rows = malloc(sizeof(struct Address) * MAX_ROWS);
 
   conn->file = fopen(dbfile, "r+");
 
@@ -139,7 +140,7 @@ void Database_delete(struct Connection *conn, int num) {
   Address_print(addr);
 
   //conn->db->rows[num] = NULL;
-  //free(addr);
+  free(addr);
 }
 
 
