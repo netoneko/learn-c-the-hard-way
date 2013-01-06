@@ -18,6 +18,24 @@ void die(char *message) {
   exit(1);
 }
 
+void print_params(char *params[], int paramc) {
+  printf("params: \n");
+
+  for (int i = 0; i < paramc; i++) {
+    printf("\t%s\n", params[i]);
+  }
+}
+
+void print_input(char *dbfile, char *action, char *params[], int paramc) {
+  printf("Input:\n");
+  printf("dbfile: %s\n", dbfile);
+  printf("action: %s\n", action);
+
+  print_params(params, paramc);
+
+  printf("======================\n");
+}
+
 struct Address {
   int id;
   char name[MAX_DATA];
@@ -41,6 +59,10 @@ void Database_destroy(struct Database *db) {
   free(db->rows);
 }
 
+void Database_set(struct Database *db, char *params[], int paramc) {
+  print_params(params, paramc);
+}
+
 struct Connection {
   FILE *file;
   struct Database *db;
@@ -61,16 +83,6 @@ void Connection_destroy(struct Connection *conn) {
   free(conn);
 }
 
-void print_input(char *dbfile, char *action, char *params[], int paramc) {
-  printf("Input:\n");
-  printf("dbfile: %s\n", dbfile);
-  printf("action: %s\n", action);
-  printf("params: \n");
-
-  for (int i = 0; i < paramc; i++) {
-    printf("\t%s\n", params[i]);
-  }
-}
 
 void process_input(char *dbfile, char *action, char *params[], int paramc) {
   struct Connection *conn = Connection_create();
@@ -79,6 +91,10 @@ void process_input(char *dbfile, char *action, char *params[], int paramc) {
   conn->db = db;
 
   switch (action[0]) {
+     case 's':
+       Database_set(db, params, paramc);
+       break;
+
      default:
        die("Invalid action, only c=create, g=get, s=set, d=delete, l=list.\n");
   }
