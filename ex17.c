@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
   printf("params: \n");
 
   for (int i = 0; i < (argc - 3) ; i++) {
-    printf("\t%s\n", *(params + i));
+    printf("\t%s\n", params[i]);
   }
 
   return 0;
