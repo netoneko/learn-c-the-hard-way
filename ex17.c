@@ -42,13 +42,39 @@ struct Address {
   char email[MAX_DATA];
 };
 
+struct Address *Address_create(char *name, char *email) {
+  struct Address *addr = malloc(sizeof(struct Address));
+  if (!addr) die("Memory error");
+
+  strncpy(addr->name, name, MAX_DATA);
+  strncpy(addr->email, email, MAX_DATA);
+
+  return addr;
+}
+
+void Address_destroy(struct Address *addr) {
+  if (!addr) die("Memory error");
+
+  //free(addr->name);
+  //free(addr->email);
+  //free(addr);
+}
+
+void Address_print(struct Address *addr) {
+  printf("Name: %s\n", addr->name);
+  printf("Email: %s\n", addr->email);
+}
+
 struct Database {
   struct Address rows[MAX_ROWS];
+  int count;
 };
 
 struct Database *Database_create() {
   struct Database *db = malloc(sizeof(struct Database));
   if (!db) die("Memory error");
+
+  db->count = 0;
 
   return db;
 }
@@ -56,11 +82,22 @@ struct Database *Database_create() {
 void Database_destroy(struct Database *db) {
   if (!db) die("Memory error");
 
-  free(db->rows);
+  //for (int i = 0; i < db->count; i++) {
+  //  Address_destroy(&db->rows[i]);
+  //}
+
+  //free(db->rows);
+  free(db);
 }
 
-void Database_set(struct Database *db, char *params[], int paramc) {
-  print_params(params, paramc);
+void Database_set(struct Database *db, char *name, char *email) {
+  if (!db) die("Memory error");
+
+  struct Address *addr = Address_create(name, email);
+  db->rows[db->count] = *addr;
+  db->count++;
+
+  Address_print(addr);
 }
 
 struct Connection {
@@ -83,6 +120,15 @@ void Connection_destroy(struct Connection *conn) {
   free(conn);
 }
 
+char *params_extract_name(char *params[], int paramc) {
+  if (paramc < 2) die("Not enough params, try <action> <name> <surname (optional)> <email>");
+  return params[0];
+}
+
+char *params_extract_email(char *params[], int paramc) {
+  if (paramc < 2) die("Not enough params, try <action> <name> <surname (optional)> <email>");
+  return params[paramc - 1];
+}
 
 void process_input(char *dbfile, char *action, char *params[], int paramc) {
   struct Connection *conn = Connection_create();
@@ -92,7 +138,9 @@ void process_input(char *dbfile, char *action, char *params[], int paramc) {
 
   switch (action[0]) {
      case 's':
-       Database_set(db, params, paramc);
+       Database_set(db, 
+                    params_extract_name(params, paramc), 
+                    params_extract_email(params, paramc));
        break;
 
      default:
