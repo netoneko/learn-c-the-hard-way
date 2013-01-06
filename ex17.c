@@ -27,20 +27,20 @@ void print_params(char *params[], int paramc) {
   }
 }
 
-void print_input(char *dbfile, char *action, char *params[], int paramc) {
-  printf("Input:\n");
-  printf("dbfile: %s\n", dbfile);
-  printf("action: %s\n", action);
-
-  print_params(params, paramc);
-
-  printf("======================\n");
-}
-
 struct Address {
   int id;
   char name[MAX_DATA];
   char email[MAX_DATA];
+};
+
+struct Database {
+  struct Address rows[MAX_ROWS];
+  int count;
+};
+
+struct Connection {
+  FILE *file;
+  struct Database *db;
 };
 
 struct Address *Address_create(char *name, char *email) {
@@ -53,28 +53,10 @@ struct Address *Address_create(char *name, char *email) {
   return addr;
 }
 
-void Address_destroy(struct Address *addr) {
-  if (!addr) die("Memory error");
-
-  //free(addr->name);
-  //free(addr->email);
-  //free(addr);
-}
-
 void Address_print(struct Address *addr) {
-  printf("Name: %s\n", addr->name);
-  printf("Email: %s\n", addr->email);
+  printf("%s <%s>\n", addr->name, addr->email);
 }
 
-struct Database {
-  struct Address rows[MAX_ROWS];
-  int count;
-};
-
-struct Connection {
-  FILE *file;
-  struct Database *db;
-};
 
 void Database_set(struct Connection *conn, char *name, char *email) {
   if (!conn) die("memory error");
@@ -147,6 +129,7 @@ void Database_write(struct Connection *conn) {
 
 void Database_list(struct Connection *conn) {
   for (int i = 0; i < conn->db->count; i++) {
+    printf("#%d ", i);
     Address_print(&conn->db->rows[i]);
   }
 
@@ -182,7 +165,6 @@ int main(int argc, char *argv[]) {
   char **params = &argv[3];
   int paramc = argc - 3;
 
-  print_input(dbfile, action, params, paramc);
   process_input(dbfile, action, params, paramc);
 
   return 0;
