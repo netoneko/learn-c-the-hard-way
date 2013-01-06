@@ -28,21 +28,37 @@ struct Database {
   struct Address rows[MAX_ROWS];
 };
 
+struct Database *Database_create() {
+  struct Database *db = malloc(sizeof(struct Database));
+  if (!db) die("Memory error");
+
+  return db;
+}
+
+void Database_destroy(struct Database *db) {
+  if (!db) die("Memory error");
+
+  free(db->rows);
+}
+
 struct Connection {
   FILE *file;
   struct Database *db;
 };
 
-struct Connection *Connection_create(char *dbname) {
+struct Connection *Connection_create() {
   struct Connection *conn = malloc(sizeof(struct Connection));
   if (!conn) die("Memory error");
 
   return conn;
 }
 
-void Connection_destroy(struct Connection *connection) {
-  free(connection->db);
-  free(connection);
+void Connection_destroy(struct Connection *conn) {
+  if (!conn) die("Memory error");  
+
+  //free(conn->db);
+  //free(conn->file);
+  free(conn);
 }
 
 void print_input(char *dbfile, char *action, char *params[], int paramc) {
@@ -57,9 +73,13 @@ void print_input(char *dbfile, char *action, char *params[], int paramc) {
 }
 
 void process_input(char *dbfile, char *action, char *params[], int paramc) {
-  struct Connection *conn = Connection_create(dbfile);
+  struct Connection *conn = Connection_create();
+  struct Database *db = Database_create();
+  
+  conn->db = db;
 
   Connection_destroy(conn);
+  Database_destroy(db);
 }
 
 int main(int argc, char *argv[]) {
