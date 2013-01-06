@@ -89,7 +89,10 @@ void Database_load(struct Connection *conn) {
   while (fgets(line, MAX_LINES, conn->file) != NULL) {
     char *name = strndup(line, MAX_DATA);
     char *email = NULL;
+
     strtok_r(name, ",", &email);
+    *rindex(email, '\n') = '\0';
+
     Database_set(conn, name, email);
   }
 }
@@ -103,6 +106,9 @@ struct Connection *Database_open(char *dbfile) {
   conn->db->count = 0;
 
   conn->file = fopen(dbfile, "r+");
+
+  if (!conn->file) conn->file = fopen(dbfile, "w+");
+
   if (!conn->file) die("Could not open the file");
 
   Database_load(conn);
@@ -121,11 +127,21 @@ void Database_close(struct Connection *conn) {
 
 void Database_write(struct Connection *conn) {
   rewind(conn->file);
-  int rc = fwrite(conn->db, sizeof(struct Database), 1, conn->file);
-  if (rc != 1) die("Failed to write database");
 
-  rc = fflush(conn->file);
-  if (rc != 1) die("Failed to flush database");
+  for (int i = 0; i < conn->db->count; i++) {
+    struct Address *addr = &conn->db->rows[i];
+    char *line = malloc(sizeof(char) * MAX_DATA);;
+    sprintf(line, "%s,%s\n", addr->name, addr->email);
+
+    puts(line);
+
+    int rc = fputs(line, conn->file);
+
+    free(line);
+    if (rc != 1) die("Failed to write database");
+  }
+
+  fflush(conn->file);
 }
 
 
@@ -144,8 +160,8 @@ void process_input(char *dbfile, char *action, char *params[], int paramc) {
      case 's':
        if (paramc < 2) die("Please specify name and email");
        Database_set(conn, params[0], params[1]);
-       //Database_write(conn);
-       break;
+       Database_write(conn);
+       //break;
 
      case 'l':
        Database_list(conn);
